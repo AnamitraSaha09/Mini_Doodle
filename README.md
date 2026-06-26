@@ -21,13 +21,6 @@ Everything comes up with one command — app + Postgres:
 docker-compose up --build
 ```
 
-Then:
-
-- API base: `http://localhost:8080/api`
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- Health: `http://localhost:8080/actuator/health`
-- Metrics: `http://localhost:8080/actuator/prometheus`
-
 ## API walkthrough
 
 All timestamps are ISO-8601 UTC (`Instant`). A typical flow:
