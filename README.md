@@ -74,7 +74,7 @@ curl -s -X DELETE http://localhost:8080/api/users/1/slots/10
 ### 5. Book a slot into a meeting
 
 ```bash
-curl -s -X POST http://localhost:8080/api/users/1/slots/10/meeting \
+curl -s -X POST http://localhost:8080/api/meetings/users/1/slots/10 \
   -H 'Content-Type: application/json' \
   -d '{"title":"1:1 sync","description":"weekly","participants":["adam@example.com","grace@example.com"]}'
 # → 201 meeting; the slot flips to BUSY.
@@ -97,18 +97,18 @@ curl -s -X DELETE http://localhost:8080/api/meetings/5   # slot returns to FREE
 
 ## API reference
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/users` | Create a user (+ calendar) |
-| `GET` | `/api/users/{userId}` | Get a user |
-| `POST` | `/api/users/{userId}/slots` | Create a free slot |
-| `GET` | `/api/users/{userId}/slots` | List slots (`status`, `page`, `size`) |
-| `PATCH` | `/api/users/{userId}/slots/{slotId}` | Update slot time/status |
-| `DELETE` | `/api/users/{userId}/slots/{slotId}` | Delete a slot |
-| `GET` | `/api/users/{userId}/availability` | Free/busy view (`from`, `to`) |
-| `POST` | `/api/users/{userId}/slots/{slotId}/meeting` | Book slot → meeting |
-| `GET` | `/api/meetings/{meetingId}` | Get a meeting |
-| `DELETE` | `/api/meetings/{meetingId}` | Cancel a meeting |
+| Method | Path                                          | Description |
+|--------|-----------------------------------------------|-------------|
+| `POST` | `/api/users`                                  | Create a user (+ calendar) |
+| `GET` | `/api/users/{userId}`                         | Get a user |
+| `POST` | `/api/users/{userId}/slots`                   | Create a free slot |
+| `GET` | `/api/users/{userId}/slots`                   | List slots (`status`, `page`, `size`) |
+| `PATCH` | `/api/users/{userId}/slots/{slotId}`          | Update slot time/status |
+| `DELETE` | `/api/users/{userId}/slots/{slotId}`          | Delete a slot |
+| `GET` | `/api/users/{userId}/availability`            | Free/busy view (`from`, `to`) |
+| `POST` | `/api/meetings/users/{userId}/slots/{slotId}` | Book slot → meeting |
+| `GET` | `/api/meetings/{meetingId}`                   | Get a meeting |
+| `DELETE` | `/api/meetings/{meetingId}`                   | Cancel a meeting |
 
 Errors use a consistent JSON shape:
 
