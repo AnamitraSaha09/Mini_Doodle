@@ -1,6 +1,8 @@
 package org.project.doodle.service;
 
 import jakarta.validation.Valid;
+import org.project.doodle.controller.dto.AvailabilityResponse;
+import org.project.doodle.controller.dto.SlotResponse;
 import org.project.doodle.controller.dto.UpdateSlotRequest;
 import org.project.doodle.domain.Calendar;
 import org.project.doodle.domain.SlotStatus;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class TimeSlotService {
@@ -104,5 +108,25 @@ public class TimeSlotService {
         if (!end.isAfter(start)) {
             throw new BadRequestException("endTime must be after startTime");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public AvailabilityResponse forWindowAvailability(Long userId, Instant from, Instant to) {
+        if (from == null || to == null) {
+            throw new BadRequestException("from and to are required");
+        }
+        if (!to.isAfter(from)) {
+            throw new BadRequestException("'to' must be after 'from'");
+        }
+
+        Long calendarId = userService.get(userId).getCalendar().getId();
+        List<TimeSlot> slots = slotRepository.findInWindow(calendarId, from, to);
+
+        List<SlotResponse> free = new ArrayList<>();
+        List<SlotResponse> busy = new ArrayList<>();
+        for (TimeSlot s : slots) {
+            (s.getStatus() == SlotStatus.FREE ? free : busy).add(SlotResponse.from(s));
+        }
+        return new AvailabilityResponse(userId, from, to, free, busy);
     }
 }

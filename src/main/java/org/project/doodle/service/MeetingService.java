@@ -27,12 +27,8 @@ public class MeetingService {
 
     @Transactional
     public Meeting book(Long userId, Long slotId, CreateMeetingRequest req) {
-        User user;
-        try{
-            user = userService.get(userId);
-        } catch (NotFoundException e){
-            throw new NotFoundException("User not found");
-        }
+        User user = userService.get(userId);
+
         TimeSlot slot = slotService.getOwnedSlot(userId, slotId);
         if (!slot.isFree()) {
             throw new ConflictException("Slot " + slotId + " is already booked");

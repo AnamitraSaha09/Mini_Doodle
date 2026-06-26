@@ -1,6 +1,7 @@
 package org.project.doodle.controller;
 
 import jakarta.validation.Valid;
+import org.project.doodle.controller.dto.AvailabilityResponse;
 import org.project.doodle.controller.dto.CreateSlotRequest;
 import org.project.doodle.controller.dto.SlotResponse;
 import org.project.doodle.controller.dto.UpdateSlotRequest;
@@ -10,8 +11,11 @@ import org.project.doodle.service.TimeSlotService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
 
 @RestController
 @RequestMapping("/api/users/{userId}/slots")
@@ -51,5 +55,13 @@ public class TimeSlotController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long userId, @PathVariable Long slotId) {
         slotService.delete(userId, slotId);
+    }
+
+    @GetMapping("/availability")
+    public AvailabilityResponse availability(
+            @PathVariable Long userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
+        return slotService.forWindowAvailability(userId, from, to);
     }
 }

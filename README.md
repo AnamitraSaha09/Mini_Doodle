@@ -84,7 +84,7 @@ curl -s -X POST http://localhost:8080/api/meetings/users/1/slots/10 \
 ### 6. Query aggregated availability for a window
 
 ```bash
-curl -s "http://localhost:8080/api/users/1/availability?from=2026-07-01T08:00:00Z&to=2026-07-01T18:00:00Z"
+curl -s "http://localhost:8080/api/users/1/slots/availability?from=2026-07-01T08:00:00Z&to=2026-07-01T18:00:00Z"
 # → {"userId":1,"from":"...","to":"...","free":[...],"busy":[...]}
 ```
 
@@ -105,7 +105,7 @@ curl -s -X DELETE http://localhost:8080/api/meetings/5   # slot returns to FREE
 | `GET` | `/api/users/{userId}/slots`                   | List slots (`status`, `page`, `size`) |
 | `PATCH` | `/api/users/{userId}/slots/{slotId}`          | Update slot time/status |
 | `DELETE` | `/api/users/{userId}/slots/{slotId}`          | Delete a slot |
-| `GET` | `/api/users/{userId}/availability`            | Free/busy view (`from`, `to`) |
+| `GET` | `/api/users/{userId}/slots/availability`      | Free/busy view (`from`, `to`) |
 | `POST` | `/api/meetings/users/{userId}/slots/{slotId}` | Book slot → meeting |
 | `GET` | `/api/meetings/{meetingId}`                   | Get a meeting |
 | `DELETE` | `/api/meetings/{meetingId}`                   | Cancel a meeting |
