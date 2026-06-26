@@ -1,4 +1,4 @@
-# Mini Doodle — Meeting Scheduling Platform
+# Mini Doodle - Meeting Scheduling Platform
 
 A high-performance simulation of a meeting scheduling platform using Spring Boot and Java
 technologies. The service enables users to manage their time slots, schedule meetings,
