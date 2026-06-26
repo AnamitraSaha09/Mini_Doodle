@@ -17,7 +17,7 @@ CREATE TABLE time_slot (
     start_time  TIMESTAMPTZ NOT NULL,
     end_time    TIMESTAMPTZ NOT NULL,
     status      VARCHAR(8)  NOT NULL DEFAULT 'FREE',
-    version     BIGINT      NOT NULL DEFAULT 0
+    version     BIGINT      NOT NULL DEFAULT 0,
     CONSTRAINT chk_slot_status CHECK (status IN ('FREE', 'BUSY')),
     CONSTRAINT chk_slot_range  CHECK (end_time > start_time),
     CONSTRAINT excl_slot_overlap EXCLUDE USING gist (
