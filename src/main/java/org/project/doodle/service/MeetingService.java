@@ -1,5 +1,7 @@
 package org.project.doodle.service;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.project.doodle.controller.dto.CreateMeetingRequest;
 import org.project.doodle.domain.Meeting;
 import org.project.doodle.domain.SlotStatus;
@@ -19,10 +21,21 @@ public class MeetingService {
     private final UserService userService;
     private final MeetingRepository meetingRepository;
 
-    public MeetingService(TimeSlotService slotService, UserService userService, MeetingRepository meetingRepository) {
+    private final Counter meetingsBooked;
+    private final Counter meetingsCancelled;
+    private final Counter bookingConflicts;
+
+    public MeetingService(TimeSlotService slotService, UserService userService,
+                          MeetingRepository meetingRepository, MeterRegistry registry) {
         this.slotService = slotService;
         this.userService = userService;
         this.meetingRepository = meetingRepository;
+        this.meetingsBooked = Counter.builder("doodle.meetings.booked")
+                .description("Number of meetings successfully booked").register(registry);
+        this.meetingsCancelled = Counter.builder("doodle.meetings.cancelled")
+                .description("Number of meetings cancelled").register(registry);
+        this.bookingConflicts = Counter.builder("doodle.meetings.booking_conflicts")
+                .description("Booking attempts rejected due to slot conflicts").register(registry);
     }
 
     @Transactional
@@ -31,6 +44,7 @@ public class MeetingService {
 
         TimeSlot slot = slotService.getOwnedSlot(userId, slotId);
         if (!slot.isFree()) {
+            bookingConflicts.increment();
             throw new ConflictException("Slot " + slotId + " is already booked");
         }
 
@@ -46,8 +60,11 @@ public class MeetingService {
                 req.participants());
 
         try {
-            return meetingRepository.saveAndFlush(meeting);
+            Meeting saved = meetingRepository.saveAndFlush(meeting);
+            meetingsBooked.increment();
+            return saved;
         } catch (ObjectOptimisticLockingFailureException ex) {
+            bookingConflicts.increment();
             throw new ConflictException(
                     "Slot " + slotId + " was booked concurrently; please retry");
         }
@@ -64,5 +81,6 @@ public class MeetingService {
         Meeting meeting = get(meetingId);
         meeting.getSlot().setStatus(SlotStatus.FREE);
         meetingRepository.delete(meeting);
+        meetingsCancelled.increment();
     }
 }

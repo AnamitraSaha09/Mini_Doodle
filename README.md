@@ -11,6 +11,7 @@ and view their custom calendar availability.
 | Language / framework | Java 21 (LTS), Spring Boot 3.3 |
 | Persistence | PostgreSQL 16, Spring Data JPA / Hibernate |
 | Migrations | Flyway |
+| Metrics | Spring Boot Actuator + Micrometer / Prometheus |
 | Tests | JUnit 5, Testcontainers |
 
 ## Run it locally
@@ -56,20 +57,20 @@ curl -s "http://localhost:8080/api/users/1/slots?status=FREE&page=0&size=50"
 
 ```bash
 # Move it / toggle status (only non-null fields are applied)
-curl -s -X PATCH http://localhost:8080/api/users/1/slots/10 \
+curl -s -X PATCH http://localhost:8080/api/users/1/slots/1 \
   -H 'Content-Type: application/json' \
   -d '{"status":"BUSY"}'
 
 # Delete (rejected with 409 if the slot is booked)
-curl -s -X DELETE http://localhost:8080/api/users/1/slots/10
+curl -s -X DELETE http://localhost:8080/api/users/1/slots/1
 ```
 
 ### 5. Book a slot into a meeting
 
 ```bash
-curl -s -X POST http://localhost:8080/api/meetings/users/1/slots/10 \
+curl -s -X POST http://localhost:8080/api/meetings/users/1/slots/1 \
   -H 'Content-Type: application/json' \
-  -d '{"title":"1:1 sync","description":"weekly","participants":["adam@example.com","grace@example.com"]}'
+  -d '{"title":"1:1 sync","description":"weekly","participants":["grace@example.com"]}'
 # → 201 meeting; the slot flips to BUSY.
 # Booking an already-booked slot → 409 Conflict.
 ```
@@ -84,7 +85,7 @@ curl -s "http://localhost:8080/api/users/1/slots/availability?from=2026-07-01T08
 ### 7. Fetch or cancel a meeting
 
 ```bash
-curl -s http://localhost:8080/api/meetings/5
+curl -s http://localhost:8080/api/meetings/1
 curl -s -X DELETE http://localhost:8080/api/meetings/5   # slot returns to FREE
 ```
 
@@ -108,3 +109,25 @@ Errors use a consistent JSON shape:
 ```json
 { "status": 409, "error": "Conflict", "message": "Slot 10 is already booked", "timestamp": "..." }
 ```
+
+## Metrics & observability
+
+Spring Boot Actuator exposes operational endpoints, and Micrometer publishes a
+Prometheus scrape endpoint:
+
+```bash
+curl -s http://localhost:8080/actuator/health
+curl -s http://localhost:8080/actuator/metrics
+curl -s http://localhost:8080/actuator/prometheus
+```
+
+Alongside the built-in JVM, HTTP, and connection-pool metrics, the service
+publishes domain counters:
+
+| Metric | Meaning |
+|--------|---------|
+| `doodle.meetings.booked` | Meetings successfully booked |
+| `doodle.meetings.cancelled` | Meetings cancelled |
+| `doodle.meetings.booking_conflicts` | Bookings rejected (slot already busy / concurrent) |
+| `doodle.slots.created` | Time slots created |
+| `doodle.slots.overlap_conflicts` | Slot create/update rejected for overlap |

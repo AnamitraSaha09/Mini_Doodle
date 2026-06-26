@@ -1,5 +1,7 @@
 package org.project.doodle.service;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.validation.Valid;
 import org.project.doodle.controller.dto.AvailabilityResponse;
 import org.project.doodle.controller.dto.SlotResponse;
@@ -28,9 +30,18 @@ public class TimeSlotService {
     private final UserService userService;
     private final TimeSlotRepository slotRepository;
 
-    public TimeSlotService(UserService userService, TimeSlotRepository slotRepository) {
+    private final Counter slotsCreated;
+    private final Counter overlapConflicts;
+
+    public TimeSlotService(UserService userService, TimeSlotRepository slotRepository,
+                           MeterRegistry registry) {
         this.userService = userService;
         this.slotRepository = slotRepository;
+        this.slotsCreated = Counter.builder("doodle.slots.created")
+                .description("Number of time slots created").register(registry);
+        this.overlapConflicts = Counter.builder("doodle.slots.overlap_conflicts")
+                .description("Slot create/update attempts rejected for overlapping an existing slot")
+                .register(registry);
     }
 
     @Transactional
@@ -38,7 +49,9 @@ public class TimeSlotService {
         validateRange(start, end);
         Calendar calendar = userService.get(userId).getCalendar();
         TimeSlot slot = new TimeSlot(calendar, start, end);
-        return saveGuardingOverlap(slot);
+        TimeSlot saved = saveGuardingOverlap(slot);
+        slotsCreated.increment();
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -96,6 +109,7 @@ public class TimeSlotService {
         try {
             return slotRepository.saveAndFlush(slot);
         } catch (DataIntegrityViolationException ex) {
+            overlapConflicts.increment();
             throw new ConflictException(
                     "Time slot overlaps an existing slot in this calendar");
         }

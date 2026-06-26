@@ -22,7 +22,7 @@ CREATE TABLE time_slot (
     CONSTRAINT chk_slot_range  CHECK (end_time > start_time),
     CONSTRAINT excl_slot_overlap EXCLUDE USING gist (
         calendar_id WITH =,
-        tsrange(start_time, end_time, '[)') WITH &&
+        tstzrange(start_time, end_time, '[)') WITH &&
     )
 );
 
